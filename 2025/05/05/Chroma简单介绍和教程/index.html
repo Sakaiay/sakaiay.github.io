@@ -1,0 +1,766 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/web_icon.png">
+  <link rel="icon" href="/img/web_icon.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Sakaiay">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Chroma简单介绍和教程  介绍 Chroma 是一款AI 原生开源的向量数据库，专为机器学习和大语言模型（LLM）应用设计，旨在高效存储、检索和匹配高维向量数据  安装 使用 pip 安装 Chroma 1pip install chromadb    基础使用命令 在Chroma中，集合（Collection） 是核心存储单元，用于管理文档、向量及元数据。每个集合（Collection）中">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Chroma简单介绍和教程">
+<meta property="og:url" content="http://example.com/2025/05/05/Chroma%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D%E5%92%8C%E6%95%99%E7%A8%8B/index.html">
+<meta property="og:site_name" content="Sakaiay">
+<meta property="og:description" content="Chroma简单介绍和教程  介绍 Chroma 是一款AI 原生开源的向量数据库，专为机器学习和大语言模型（LLM）应用设计，旨在高效存储、检索和匹配高维向量数据  安装 使用 pip 安装 Chroma 1pip install chromadb    基础使用命令 在Chroma中，集合（Collection） 是核心存储单元，用于管理文档、向量及元数据。每个集合（Collection）中">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/05/05/Chroma%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D%E5%92%8C%E6%95%99%E7%A8%8B/image1.png">
+<meta property="article:published_time" content="2025-05-05T09:23:15.000Z">
+<meta property="article:modified_time" content="2025-05-05T09:28:23.968Z">
+<meta property="article:author" content="Sakaiay">
+<meta property="article:tag" content="llm">
+<meta property="article:tag" content="chroma">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/2025/05/05/Chroma%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D%E5%92%8C%E6%95%99%E7%A8%8B/image1.png">
+  
+  
+  
+  <title>Chroma简单介绍和教程 - Sakaiay</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/KaTeX/0.16.2/katex.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":"aspNX8i3GSBYUjhTydoneKGV-gzGzoHsz","app_key":"L0JSkdprGlxz0p9lO8Uk3NnG","server_url":"https://aspnx8i3.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Sakaiay</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/background1.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Chroma简单介绍和教程"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        Sakaiay
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-05-05 17:23" pubdate>
+          2025年5月5日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          33 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Chroma简单介绍和教程</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="chroma简单介绍和教程"><a class="markdownIt-Anchor" href="#chroma简单介绍和教程"></a> Chroma简单介绍和教程</h1>
+<h2 id="介绍"><a class="markdownIt-Anchor" href="#介绍"></a> 介绍</h2>
+<p>Chroma 是一款<strong>AI 原生开源的向量数据库</strong>，专为机器学习和大语言模型（LLM）应用设计，旨在高效存储、检索和匹配高维向量数据</p>
+<h2 id="安装"><a class="markdownIt-Anchor" href="#安装"></a> 安装</h2>
+<p>使用 pip 安装 Chroma</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs Bash">pip install chromadb  <br></code></pre></td></tr></table></figure>
+<h2 id="基础使用命令"><a class="markdownIt-Anchor" href="#基础使用命令"></a> 基础使用命令</h2>
+<p>在<strong>Chroma</strong>中，<strong>集合（Collection）</strong> 是核心存储单元，用于管理文档、向量及元数据。每个集合（Collection）中存储的数据格式如下图所示：</p>
+<img src="/2025/05/05/Chroma%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D%E5%92%8C%E6%95%99%E7%A8%8B/image1.png" srcset="/img/loading.gif" lazyload class="">
+<p><strong><code>documents</code></strong> <strong>（文档内容）：</strong> 存储原始文本或非结构化数据（如段落、句子等）。</p>
+<p><strong><code>embeddings</code></strong> <strong>（嵌入向量）：</strong> 文档内容的高维向量表示，用于支持基于相似度的检索（如余弦相似度）。Chroma 内置多种嵌入模型（如 HuggingFace、OpenAI），也可自定义嵌入函数。</p>
+<p><strong><code>metadatas</code></strong> <strong>（元数据）：</strong> 附加的结构化信息，例如文档来源、页码、时间戳等。这些信息由用户手动添加。</p>
+<p><strong><code>ids</code></strong> <strong>（唯一标识符）：</strong> 每个文档的唯一 ID，需满足命名规则：长度 3-63 字符，以小写字母或数字开头结尾，中间可包含连字符（如<code>&quot;doc-001&quot;</code>）。</p>
+<h3 id="创建持久客户端"><a class="markdownIt-Anchor" href="#创建持久客户端"></a> 创建持久客户端</h3>
+<p>Chroma 支持持久化存储，通过<code>PersistentClient</code>指定本地路径保存数据，避免重启后数据丢失：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">import</span> chromadb  <br>client = chromadb.PersistentClient(path=<span class="hljs-string">&quot;./chroma_db&quot;</span>)  <span class="hljs-comment"># 持久化路径</span><br></code></pre></td></tr></table></figure>
+<h3 id="创建集合"><a class="markdownIt-Anchor" href="#创建集合"></a> 创建集合</h3>
+<p>集合是 Chroma 的核心存储单元，类似于数据库中的表。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs Python">collection = client.create_collection(  <br>    name=<span class="hljs-string">&quot;my_collection&quot;</span>,  <br>    embedding_function=embedding_model  <span class="hljs-comment"># 可选嵌入函数</span><br>)  <br></code></pre></td></tr></table></figure>
+<p><strong>注意：</strong> 如果创建集合的时候不指定<code>embedding_function</code>，那么添加数据的时候必须手动加入<code>embeddings</code>。</p>
+<h3 id="删除集合"><a class="markdownIt-Anchor" href="#删除集合"></a> 删除集合</h3>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs Python">client.delete_collection(name=<span class="hljs-string">&quot;my_collection&quot;</span>)  <br></code></pre></td></tr></table></figure>
+<h3 id="添加数据"><a class="markdownIt-Anchor" href="#添加数据"></a> 添加数据</h3>
+<p>通过<code>.add()</code>方法插入文档、向量、元数据及唯一 ID：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs Python">collection.add(  <br>    documents=[<span class="hljs-string">&quot;人工智能是未来的核心技术。&quot;</span>, <span class="hljs-string">&quot;Chroma 是高效的向量数据库。&quot;</span>],  <br>    metadatas=[&#123;<span class="hljs-string">&quot;source&quot;</span>: <span class="hljs-string">&quot;book1&quot;</span>&#125;, &#123;<span class="hljs-string">&quot;source&quot;</span>: <span class="hljs-string">&quot;article2&quot;</span>&#125;],  <span class="hljs-comment"># 可选元数据 </span><br>    ids=[<span class="hljs-string">&quot;doc1&quot;</span>, <span class="hljs-string">&quot;doc2&quot;</span>]  <span class="hljs-comment"># 唯一标识符，需符合命名规则</span><br>)  <br></code></pre></td></tr></table></figure>
+<p><strong>注意：</strong> 如果创建集合的时候没有指定<code>embedding_function</code>，添加数据的时候必须加入embeddings参数。</p>
+<h3 id="删除数据"><a class="markdownIt-Anchor" href="#删除数据"></a> 删除数据</h3>
+<p>通过<code>.delete()</code>方法移除指定 ID 或匹配条件的文档：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Python">collection.delete(ids=[<span class="hljs-string">&quot;doc1&quot;</span>])  <span class="hljs-comment"># 按 ID 删除 </span><br><span class="hljs-comment"># 或按条件删除  </span><br>collection.delete(where=&#123;<span class="hljs-string">&quot;source&quot;</span>: <span class="hljs-string">&quot;article2&quot;</span>&#125;)  <span class="hljs-comment"># 按元数据过滤删除  </span><br></code></pre></td></tr></table></figure>
+<h3 id="查询数据"><a class="markdownIt-Anchor" href="#查询数据"></a> 查询数据</h3>
+<p>通过<code>.query()</code>实现相似性搜索或条件过滤：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs Python">results = collection.query(  <br>    query_texts=[<span class="hljs-string">&quot;向量数据库&quot;</span>],  <span class="hljs-comment"># 查询文本  </span><br>    n_results=<span class="hljs-number">2</span>,  <span class="hljs-comment"># 返回最相似的 2 条结果 </span><br>    where=&#123;<span class="hljs-string">&quot;source&quot;</span>: <span class="hljs-string">&quot;book1&quot;</span>&#125;  <span class="hljs-comment"># 可选过滤条件 </span><br>)  <br><span class="hljs-built_in">print</span>(results[<span class="hljs-string">&quot;documents&quot;</span>])  <span class="hljs-comment"># 输出匹配的文档  </span><br></code></pre></td></tr></table></figure>
+<h2 id="进阶使用"><a class="markdownIt-Anchor" href="#进阶使用"></a> 进阶使用</h2>
+<p>Chroma现在大多和LLM结合使用用于构建RAG，Langchain就封装了Chroma方便用户使用，具体可以参考官网：<a target="_blank" rel="noopener" href="https://python.langchain.com/docs/integrations/vectorstores/chroma/">Chroma | 🦜️🔗 LangChain</a></p>
+<p>为了方便使用我也对chroma进行二次封装，结合了embedding模型。</p>
+<p>首先我封装了embedding类，支持离线和在线</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-comment"># CustomEmbedding.py</span><br><span class="hljs-keyword">import</span> os<br><span class="hljs-keyword">import</span> openai<br><span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> <span class="hljs-type">Union</span>, <span class="hljs-type">List</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">EmbeddingModel</span>:<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params"></span><br><span class="hljs-params">        self,</span><br><span class="hljs-params">        model_name: <span class="hljs-built_in">str</span>,</span><br><span class="hljs-params">        model_path: <span class="hljs-built_in">str</span>, </span><br><span class="hljs-params">        url: <span class="hljs-built_in">str</span> = <span class="hljs-literal">None</span>,</span><br><span class="hljs-params">        api_key: <span class="hljs-built_in">str</span> = <span class="hljs-literal">None</span></span><br><span class="hljs-params">    </span>):<br>        <span class="hljs-keyword">if</span> url <span class="hljs-keyword">or</span> api_key:<br>            <span class="hljs-comment"># API模式</span><br>            <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-built_in">all</span>([url, api_key]):<br>                <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">&quot;API mode need url and api_key&quot;</span>)<br>            <br>            <span class="hljs-variable language_">self</span>.mode = <span class="hljs-string">&quot;api&quot;</span><br>            <span class="hljs-variable language_">self</span>.client = openai.Client(base_url=url, api_key=api_key)<br>            <span class="hljs-variable language_">self</span>.model_name = model_name<br>            <br>        <span class="hljs-keyword">else</span>:<br>            <span class="hljs-comment"># 本地模式</span><br>            <span class="hljs-variable language_">self</span>.model_path = model_path<br>            <span class="hljs-variable language_">self</span>.mode = <span class="hljs-string">&quot;local&quot;</span><br>            <span class="hljs-keyword">try</span>:<br>                <span class="hljs-keyword">from</span> sentence_transformers <span class="hljs-keyword">import</span> SentenceTransformer<br>            <span class="hljs-keyword">except</span> ImportError:<br>                <span class="hljs-keyword">raise</span> ImportError(<span class="hljs-string">&quot;install sentence-transformers：pip install sentence-transformers&quot;</span>)<br>            <br>            <span class="hljs-variable language_">self</span>.model = SentenceTransformer(<span class="hljs-variable language_">self</span>.model_path)<br>            <span class="hljs-variable language_">self</span>.embedding_dimension = <span class="hljs-variable language_">self</span>.model.get_sentence_embedding_dimension()<br><br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_embeddings_batch</span>(<span class="hljs-params">self, texts: <span class="hljs-type">Union</span>[<span class="hljs-built_in">str</span>, <span class="hljs-type">List</span>[<span class="hljs-built_in">str</span>]]</span>) -&gt; <span class="hljs-type">List</span>[<span class="hljs-type">List</span>[<span class="hljs-built_in">float</span>]]:<br>        <span class="hljs-keyword">if</span> <span class="hljs-variable language_">self</span>.mode == <span class="hljs-string">&quot;api&quot;</span>:<br>            response = <span class="hljs-variable language_">self</span>.client.embeddings.create(<br>                model=<span class="hljs-variable language_">self</span>.model_name,<br>                <span class="hljs-built_in">input</span>=texts<br>            )<br>            <span class="hljs-keyword">return</span> [item.embedding <span class="hljs-keyword">for</span> item <span class="hljs-keyword">in</span> response.data]<br>        <span class="hljs-keyword">else</span>:<br>            embeddings = <span class="hljs-variable language_">self</span>.model.encode(texts, convert_to_tensor=<span class="hljs-literal">False</span>)<br>            <span class="hljs-keyword">return</span> embeddings.tolist()<br>        <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">generate_embeddings</span>(<span class="hljs-params">self, texts: <span class="hljs-type">Union</span>[<span class="hljs-built_in">str</span>, <span class="hljs-type">List</span>[<span class="hljs-built_in">str</span>]]</span>):<br>        <span class="hljs-keyword">if</span> <span class="hljs-built_in">isinstance</span>(texts, <span class="hljs-built_in">str</span>):<br>            texts = [texts]<br>            <br>        BATCH_SIZE = <span class="hljs-number">1000</span><br>        embeddings = []<br>        <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">0</span>, <span class="hljs-built_in">len</span>(texts), BATCH_SIZE):<br>            batch = texts[i:i+BATCH_SIZE]<br>            batch_embeddings = <span class="hljs-variable language_">self</span>.generate_embeddings_batch(batch)<br>            embeddings.extend(batch_embeddings)<br>        <br>        <span class="hljs-keyword">return</span> embeddings<br>    <br></code></pre></td></tr></table></figure>
+<p>然后封装chroma，用于与chromadb交互</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">import</span> chromadb<br><span class="hljs-keyword">from</span> CustomEmbedding <span class="hljs-keyword">import</span> EmbeddingModel<br><br><span class="hljs-keyword">import</span> uuid<br><span class="hljs-keyword">from</span> chromadb.config <span class="hljs-keyword">import</span> Settings<br><span class="hljs-keyword">from</span> typing <span class="hljs-keyword">import</span> <span class="hljs-type">Union</span>, <span class="hljs-type">List</span>, <span class="hljs-type">Dict</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ChromaDBManager</span>:<br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, </span><br><span class="hljs-params">                 embedding_model, </span><br><span class="hljs-params">                 persist_directory=<span class="hljs-string">&quot;./chroma_db&quot;</span></span>):<br>        <span class="hljs-string">&#x27;&#x27;&#x27;</span><br><span class="hljs-string">            初始化Chroma数据库客户端</span><br><span class="hljs-string">        &#x27;&#x27;&#x27;</span><br>        <span class="hljs-variable language_">self</span>.client = chromadb.PersistentClient(path=persist_directory)<br>        <span class="hljs-variable language_">self</span>.embedding_model = embedding_model<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">get_collections_list</span>(<span class="hljs-params">self</span>) -&gt; <span class="hljs-type">List</span>[<span class="hljs-built_in">str</span>]:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">            获取所有集合的名称</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">return</span> [collection.name <span class="hljs-keyword">for</span> collection <span class="hljs-keyword">in</span> <span class="hljs-variable language_">self</span>.client.list_collections()]<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">get_collection</span>(<span class="hljs-params">self, collection_name: <span class="hljs-built_in">str</span></span>):<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">            获取指定名称的集合</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        collections = &#123;collection.name: collection <span class="hljs-keyword">for</span> collection <span class="hljs-keyword">in</span> <span class="hljs-variable language_">self</span>.client.list_collections()&#125;<br>        <span class="hljs-keyword">return</span> collections.get(collection_name)<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">create_collection</span>(<span class="hljs-params">self, collection_name: <span class="hljs-built_in">str</span></span>):<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">            创建一个新的集合</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        <span class="hljs-keyword">if</span> collection_name <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> <span class="hljs-variable language_">self</span>.get_collections_list():<br>            <span class="hljs-variable language_">self</span>.client.create_collection(name=collection_name)<br>        <span class="hljs-keyword">return</span> <span class="hljs-variable language_">self</span>.get_collection(collection_name)<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">delete_collection</span>(<span class="hljs-params">self, collection_name: <span class="hljs-built_in">str</span></span>):<br>        <span class="hljs-string">&#x27;&#x27;&#x27; </span><br><span class="hljs-string">           删除指定集合</span><br><span class="hljs-string">        &#x27;&#x27;&#x27;</span><br>        <span class="hljs-keyword">if</span> collection_name <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> <span class="hljs-variable language_">self</span>.get_collections_list():<br>            <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">f&quot;Delete Error: Collection &#x27;<span class="hljs-subst">&#123;collection_name&#125;</span>&#x27; does not exist.&quot;</span>)<br>        <span class="hljs-variable language_">self</span>.client.delete_collection(name=collection_name)<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">add_texts</span>(<span class="hljs-params">self, </span><br><span class="hljs-params">                  collection_name: <span class="hljs-built_in">str</span>, </span><br><span class="hljs-params">                  texts: <span class="hljs-type">List</span>[<span class="hljs-built_in">str</span>], </span><br><span class="hljs-params">                  metadatas: <span class="hljs-type">List</span>[<span class="hljs-type">Dict</span>]</span>) -&gt; <span class="hljs-type">List</span>[<span class="hljs-type">Dict</span>]:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">            添加文本及其嵌入向量到指定集合中，并返回生成的ID</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        collection = <span class="hljs-variable language_">self</span>.get_collection(collection_name)<br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> collection:<br>            <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">f&quot;Collection &#x27;<span class="hljs-subst">&#123;collection_name&#125;</span>&#x27; does not exist. Please create it first.&quot;</span>)<br><br>        doc_infos = []<br>        ids = [<span class="hljs-built_in">str</span>(uuid.uuid1()) <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(texts))]<br>        embeddings = <span class="hljs-variable language_">self</span>.embedding_model.generate_embeddings(texts)<br>        <span class="hljs-keyword">for</span> _<span class="hljs-built_in">id</span>, text, embedding, metadata <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(ids, texts, embeddings, metadatas):<br>            collection.add(<br>                ids=_<span class="hljs-built_in">id</span>,<br>                embeddings=embedding,<br>                metadatas=metadata,<br>                documents=text<br>            )<br>            doc_infos.append(&#123;<span class="hljs-string">&quot;id&quot;</span>: _<span class="hljs-built_in">id</span>, <span class="hljs-string">&quot;metadata&quot;</span>: metadata&#125;)<br>        <span class="hljs-keyword">return</span> doc_infos<br>    <br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">get_collection_texts</span>(<span class="hljs-params">self, collection_name: <span class="hljs-built_in">str</span></span>) -&gt; <span class="hljs-type">List</span>[<span class="hljs-type">Dict</span>]:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">            获得指定集合所有数据</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        collection = <span class="hljs-variable language_">self</span>.get_collection(collection_name)<br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> collection:<br>            <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">f&quot;Collection &#x27;<span class="hljs-subst">&#123;collection_name&#125;</span>&#x27; does not exist.&quot;</span>)<br><br>        results = collection.get()<br>        <span class="hljs-keyword">return</span> [<br>            &#123;<br>                <span class="hljs-string">&quot;id&quot;</span>: id_,<br>                <span class="hljs-string">&quot;text&quot;</span>: document,<br>                <span class="hljs-string">&quot;metadata&quot;</span>: metadata<br>            &#125;<br>            <span class="hljs-keyword">for</span> id_, document, metadata <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(results[<span class="hljs-string">&quot;ids&quot;</span>], results[<span class="hljs-string">&quot;documents&quot;</span>], results[<span class="hljs-string">&quot;metadatas&quot;</span>])<br>        ]<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">delete_texts</span>(<span class="hljs-params">self, </span><br><span class="hljs-params">                     collection_name: <span class="hljs-built_in">str</span>, </span><br><span class="hljs-params">                     ids: <span class="hljs-type">List</span>[<span class="hljs-built_in">str</span>]</span>):<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">            从指定集合中删除指定ID的文本</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        collection = <span class="hljs-variable language_">self</span>.get_collection(collection_name)<br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> collection:<br>            <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">f&quot;Collection &#x27;<span class="hljs-subst">&#123;collection_name&#125;</span>&#x27; does not exist.&quot;</span>)<br>        collection.delete(ids=ids)<br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">upsert_texts</span>(<span class="hljs-params">self,</span><br><span class="hljs-params">                     collection_name: <span class="hljs-built_in">str</span>, </span><br><span class="hljs-params">                     texts: <span class="hljs-type">List</span>[<span class="hljs-built_in">str</span>], </span><br><span class="hljs-params">                     metadatas: <span class="hljs-type">List</span>[<span class="hljs-type">Dict</span>],</span><br><span class="hljs-params">                     ids: <span class="hljs-type">List</span>[<span class="hljs-built_in">str</span>] = <span class="hljs-literal">None</span>,</span><br><span class="hljs-params">                     </span>):<br>        <span class="hljs-string">&#x27;&#x27;&#x27; </span><br><span class="hljs-string">           更新指定集合中文本</span><br><span class="hljs-string">           如果ID存在就更新存在的文本，如果ID不存在就插入新的文本</span><br><span class="hljs-string">        &#x27;&#x27;&#x27;</span><br>        collection = <span class="hljs-variable language_">self</span>.get_collection(collection_name)<br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> collection:<br>            <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">f&quot;Collection &#x27;<span class="hljs-subst">&#123;collection_name&#125;</span>&#x27; does not exist.&quot;</span>)<br>        <br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> ids:<br>            ids = [<span class="hljs-built_in">str</span>(uuid.uuid1()) <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(texts))]<br>        doc_infos = []<br>        embeddings = <span class="hljs-variable language_">self</span>.embedding_model.generate_embeddings(texts)<br>        <span class="hljs-keyword">for</span> _<span class="hljs-built_in">id</span>, text, embedding, metadata <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(ids, texts, embeddings, metadatas):<br>            collection.upsert(<br>                ids=_<span class="hljs-built_in">id</span>,<br>                embeddings=embedding,<br>                metadatas=metadata,<br>                documents=text<br>            )<br>            doc_infos.append(&#123;<span class="hljs-string">&quot;id&quot;</span>: _<span class="hljs-built_in">id</span>, <span class="hljs-string">&quot;metadata&quot;</span>: metadata&#125;)<br>        <span class="hljs-keyword">return</span> doc_infos<br>    <br>    <br>    <span class="hljs-keyword">def</span> <span class="hljs-title function_">query_texts</span>(<span class="hljs-params">self, </span><br><span class="hljs-params">                    collection_name: <span class="hljs-built_in">str</span>, </span><br><span class="hljs-params">                    query_text: <span class="hljs-built_in">str</span>, </span><br><span class="hljs-params">                    n_results: <span class="hljs-built_in">int</span> = <span class="hljs-number">3</span></span>) -&gt; <span class="hljs-type">List</span>[<span class="hljs-type">Dict</span>]:<br>        <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">            根据查询文本检索指定集合中的相似文本</span><br><span class="hljs-string">        &quot;&quot;&quot;</span><br>        collection = <span class="hljs-variable language_">self</span>.get_collection(collection_name)<br>        <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> collection:<br>            <span class="hljs-keyword">raise</span> ValueError(<span class="hljs-string">f&quot;Collection &#x27;<span class="hljs-subst">&#123;collection_name&#125;</span>&#x27; does not exist.&quot;</span>)<br><br>        query_embedding = <span class="hljs-variable language_">self</span>.embedding_model.generate_embeddings(query_text)<br>        results = collection.query(<br>            query_embeddings=query_embedding,<br>            n_results=n_results<br>        )<br>        <span class="hljs-keyword">return</span> [<br>            &#123;<br>                <span class="hljs-string">&quot;id&quot;</span>: id_,<br>                <span class="hljs-string">&quot;text&quot;</span>: document,<br>                <span class="hljs-string">&quot;metadata&quot;</span>: metadata<br>            &#125;<br>            <span class="hljs-keyword">for</span> id_, document, metadata <span class="hljs-keyword">in</span> <span class="hljs-built_in">zip</span>(results[<span class="hljs-string">&quot;ids&quot;</span>][<span class="hljs-number">0</span>], results[<span class="hljs-string">&quot;documents&quot;</span>][<span class="hljs-number">0</span>], results[<span class="hljs-string">&quot;metadatas&quot;</span>][<span class="hljs-number">0</span>])<br>        ]<br>        <br>    <br>   <br></code></pre></td></tr></table></figure>
+<h3 id="初始化embeddingchroma和数据"><a class="markdownIt-Anchor" href="#初始化embeddingchroma和数据"></a> 初始化embedding，chroma和数据</h3>
+<p>使用的时候必须初始化<code>embedding</code>类。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs Python">model_name = <span class="hljs-string">&quot;bge-m3&quot;</span><br>model_path =  <span class="hljs-string">&quot;xxxxx/bge-m3&quot;</span><br>url = <span class="hljs-string">&quot;http://127.0.0.1:9997/v1&quot;</span><br>api_key = <span class="hljs-string">&quot;EMPTY&quot;</span><br>myembedding = EmbeddingModel(model_name=model_name, <br>               model_path=model_path, <br>               url=url, <br>               api_key=api_key)<br></code></pre></td></tr></table></figure>
+<p>初始化两种数据，<strong>sports</strong>和<strong>city</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs Python">texts_sports = [<br>        <span class="hljs-string">&quot;2011年7月20日，姚明正式宣布退役&quot;</span>,<br>         <span class="hljs-string">&quot;1998年4月，姚明入选王非执教的国家队，开始了职业篮球生涯。&quot;</span>,<br>         <span class="hljs-string">&quot;沙奎尔·奥尼尔（Shaquille O&#x27;Neal），全名沙奎尔·雷肖恩·奥尼尔（Shaquille Rashaun O&#x27;Neal），昵称沙克（Shaq）&quot;</span>,<br>        <span class="hljs-string">&quot;奥尼尔在1992年NBA选秀中于第1轮第1位以状元秀的身份被奥兰多魔术队选中&quot;</span><br>]<br>metadatas_sports = [&#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;sports&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: idx&#125; <span class="hljs-keyword">for</span> idx <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(texts_sports))]<br><br><br>texts_city = [<br>    <span class="hljs-string">&quot;北京市（Beijing），简称“京”，古称燕京、北平，是中华人民共和国首都、直辖市、国家中心城市、超大城市&quot;</span>,<br>    <span class="hljs-string">&quot;2023年，北京市全年实现地区生产总值43760.7亿元，按不变价格计算，比上年增长5.2%&quot;</span>,<br>    <span class="hljs-string">&quot;纽约（英语：New York），位于美国纽约州南端（非纽约州首府），为美国人口最多的城市、纽约都会区的核心&quot;</span>,<br>    <span class="hljs-string">&quot;纽约位于美国东北部，滨临大西洋海岸，坐拥世界上最大天然港口之一的纽约和新泽西港&quot;</span><br>]<br>metadatas_city = [&#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: idx&#125; <span class="hljs-keyword">for</span> idx <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(texts_city))]<br></code></pre></td></tr></table></figure>
+<p>初始化<code>chroma</code>类</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs Python">db_manager = ChromaDBManager(embedding_model=myembedding)<br></code></pre></td></tr></table></figure>
+<h3 id="添加集合"><a class="markdownIt-Anchor" href="#添加集合"></a> 添加集合</h3>
+<p>添加<code>collection</code>，添加两个<code>collection</code>，分为为<strong>sports</strong>和<strong>city</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs Python">collection_sports = <span class="hljs-string">&quot;sports&quot;</span><br>db_manager.create_collection(collection_sports)<br>doc_infos_sports = db_manager.add_texts(collection_sports, <br>                                  texts_sports, <br>                                  metadatas_sports)<br><br>collection_city = <span class="hljs-string">&quot;city&quot;</span><br>db_manager.create_collection(collection_city)<br>doc_infos_city = db_manager.add_texts(collection_city, <br>                                  texts_city, <br>                                  metadatas_city)<br><br><br></code></pre></td></tr></table></figure>
+<h3 id="查看集合"><a class="markdownIt-Anchor" href="#查看集合"></a> 查看集合</h3>
+<p>查看一下现在有什么集合</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Python">collection_list = db_manager.get_collections_list()<br><span class="hljs-built_in">print</span>(collection_list)<br><span class="hljs-comment"># [&#x27;city&#x27;, &#x27;sports&#x27;]</span><br></code></pre></td></tr></table></figure>
+<h3 id="查询集合"><a class="markdownIt-Anchor" href="#查询集合"></a> 查询集合</h3>
+<p>查询集合，问：** ‘奥尼尔选秀’<strong>，并且指定查询</strong>sports**集合</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs Python">query = <span class="hljs-string">&#x27;奥尼尔选秀&#x27;</span><br><br>query_res = db_manager.query_texts(<br>    collection_name=<span class="hljs-string">&#x27;sports&#x27;</span>,<br>    query_text=query,<br>    n_results=<span class="hljs-number">1</span><br>)<br><span class="hljs-built_in">print</span>(query_res)<br><span class="hljs-string">&#x27;&#x27;&#x27;</span><br><span class="hljs-string"> [&#123;&#x27;id&#x27;: &#x27;da433748-258c-11f0-9f61-3cecefb2262e&#x27;, </span><br><span class="hljs-string">&#x27;text&#x27;: &#x27;奥尼尔在1992年NBA选秀中于第1轮第1位以状元秀的身份被奥兰多魔术队选中&#x27;,</span><br><span class="hljs-string"> &#x27;metadata&#x27;: &#123;&#x27;domain&#x27;: &#x27;sports&#x27;, &#x27;source&#x27;: 3&#125;&#125;]</span><br><span class="hljs-string">&#x27;&#x27;&#x27;</span><br></code></pre></td></tr></table></figure>
+<h3 id="删除集合-2"><a class="markdownIt-Anchor" href="#删除集合-2"></a> 删除集合</h3>
+<p>删除<strong>sports</strong>集合</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs Python">db_manager.delete_collection(collection_name=<span class="hljs-string">&#x27;sports&#x27;</span>)<br></code></pre></td></tr></table></figure>
+<p>我们再看一下有什么<strong>collection</strong>，<strong>sports</strong>集合被删除了，现在还有<strong>city</strong>集合</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Python">collection_list = db_manager.get_collections_list()<br><span class="hljs-built_in">print</span>(collection_list)<br><span class="hljs-comment"># [&#x27;city&#x27;]</span><br></code></pre></td></tr></table></figure>
+<h3 id="获得collection中所有的数据"><a class="markdownIt-Anchor" href="#获得collection中所有的数据"></a> 获得collection中所有的数据</h3>
+<p>返回id、text和metadata</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs Python">collection_results = db_manager.get_collection_texts(collection_name=<span class="hljs-string">&#x27;city&#x27;</span>)<br><span class="hljs-keyword">for</span> collection_result <span class="hljs-keyword">in</span> collection_results:<br>    <span class="hljs-built_in">print</span>(collection_result)<br><br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;0f04c0be-258d-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;北京市（Beijing），简称“京”，古称燕京、北平，是中华人民共和国首都、直辖市、国家中心城市、超大城市&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">0</span>&#125;&#125;  <br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;0f04c172-258d-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;2023年，北京市全年实现地区生产总值43760.7亿元，按不变价格计算，比上年增长5.2%&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">1</span>&#125;&#125;  <br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;0f04c1d6-258d-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;纽约（英语：New York），位于美国纽约州南端（非纽约州首府），为美国人口最多的城市、纽约都会区的核心&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">2</span>&#125;&#125;  <br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;0f04c226-258d-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;纽约位于美国东北部，滨临大西洋海岸，坐拥世界上最大天然港口之一的纽约和新泽西港&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">3</span>&#125;&#125;<br></code></pre></td></tr></table></figure>
+<h3 id="删除collection中的指定数据"><a class="markdownIt-Anchor" href="#删除collection中的指定数据"></a> 删除collection中的指定数据</h3>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs Python">id_list = [<span class="hljs-string">&#x27;0f04c0be-258d-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;0f04c172-258d-11f0-9f61-3cecefb2262e&#x27;</span>]<br>db_manager.delete_texts(<span class="hljs-string">&#x27;city&#x27;</span>, id_list)<br><br>collection_results = db_manager.get_collection_texts(collection_name=<span class="hljs-string">&#x27;city&#x27;</span>)<br><span class="hljs-keyword">for</span> collection_result <span class="hljs-keyword">in</span> collection_results:<br>    <span class="hljs-built_in">print</span>(collection_result)<br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;0f04c1d6-258d-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;纽约（英语：New York），位于美国纽约州南端（非纽约州首府），为美国人口最多的城市、纽约都会区的核心&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">2</span>&#125;&#125;<br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;0f04c226-258d-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;纽约位于美国东北部，滨临大西洋海岸，坐拥世界上最大天然港口之一的纽约和新泽西港&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">3</span>&#125;&#125;<br><br><br></code></pre></td></tr></table></figure>
+<h3 id="修改collection中的文本"><a class="markdownIt-Anchor" href="#修改collection中的文本"></a> 修改collection中的文本</h3>
+<p>如果提供ID就更新ID对应的文本，如果没有提供ID就插入新的文本<br />
+下面首先演示一下没有提供ID的情况：需要提供新的文本和metadata信息</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><code class="hljs Python">texts_city2 = [<br>    <span class="hljs-string">&quot;上海市地处长江三角洲冲积平原，地势坦荡低平， 属亚热带季风性气候，最大河流为黄浦江。&quot;</span>,<br>    <span class="hljs-string">&quot;2024年，上海市实现地区生产总值53926.71亿元，按不变价格计算，比上年增长5.0%。&quot;</span>,<br>    <span class="hljs-string">&quot;上海市是中国国际经济、金融、贸易、航运、科技创新中心，第三产业为其支柱产业，有着外贸物流、金融保险业、信息服务业、旅游业、房地产业和其他新兴服务业， 成为拉动经济增长“主动力”&quot;</span><br>    ]<br>metadatas_city2 = [&#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city2&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: idx&#125; <span class="hljs-keyword">for</span> idx <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-built_in">len</span>(texts_city2))]<br>db_manager.upsert_texts(collection_name=<span class="hljs-string">&#x27;city&#x27;</span>, texts=texts_city2, metadatas=metadatas_city2)<br><br>[&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;cce06eb6-258e-11f0-9f61-3cecefb2262e&#x27;</span>,<br>  <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city2&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">0</span>&#125;&#125;,<br> &#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;cce06f92-258e-11f0-9f61-3cecefb2262e&#x27;</span>,<br>  <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city2&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">1</span>&#125;&#125;,<br> &#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;cce06ff6-258e-11f0-9f61-3cecefb2262e&#x27;</span>,<br>  <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city2&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">2</span>&#125;&#125;]<br></code></pre></td></tr></table></figure>
+<p>插入新数据后再查看一下集合内的所有文本，发现插入进去了</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs Python">collection_results = db_manager.get_collection_texts(collection_name=<span class="hljs-string">&#x27;city&#x27;</span>)<br><span class="hljs-keyword">for</span> collection_result <span class="hljs-keyword">in</span> collection_results:<br>    <span class="hljs-built_in">print</span>(collection_result)<br><br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;0f04c1d6-258d-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;纽约（英语：New York），位于美国纽约州南端（非纽约州首府），为美国人口最多的城市、纽约都会区的核心&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">2</span>&#125;&#125;<br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;0f04c226-258d-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;纽约位于美国东北部，滨临大西洋海岸，坐拥世界上最大天然港口之一的纽约和新泽西港&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">3</span>&#125;&#125;<br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;cce06eb6-258e-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;上海市地处长江三角洲冲积平原，地势坦荡低平， 属亚热带季风性气候，最大河流为黄浦江。&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city2&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">0</span>&#125;&#125;<br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;cce06f92-258e-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;2024年，上海市实现地区生产总值53926.71亿元，按不变价格计算，比上年增长5.0%。&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city2&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">1</span>&#125;&#125;<br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;cce06ff6-258e-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;上海市是中国国际经济、金融、贸易、航运、科技创新中心，第三产业为其支柱产业，有着外贸物流、金融保险业、信息服务业、旅游业、房地产业和其他新兴服务业， 成为拉动经济增长“主动力”&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city2&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">2</span>&#125;&#125;<br><br></code></pre></td></tr></table></figure>
+<p>下面试一下提供ID，修改现有的文本</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs Python">ids = [<span class="hljs-string">&#x27;0f04c1d6-258d-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;0f04c226-258d-11f0-9f61-3cecefb2262e&#x27;</span>]<br>texts_city3 = [<span class="hljs-string">&#x27;北京市（Beijing），简称“京”，古称燕京、北平，是中华人民共和国首都、直辖市、国家中心城市、超大城市&#x27;</span>,<br>               <span class="hljs-string">&#x27;2023年，北京市全年实现地区生产总值43760.7亿元，按不变价格计算，比上年增长5.2%&#x27;</span>]<br>metadatas_city3 = [&#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">2</span>&#125;, &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">3</span>&#125;]<br><br>db_manager.upsert_texts(collection_name=<span class="hljs-string">&#x27;city&#x27;</span>, texts=texts_city3, metadatas=metadatas_city3, ids=ids)<br>[&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;0f04c1d6-258d-11f0-9f61-3cecefb2262e&#x27;</span>,<br>  <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">2</span>&#125;&#125;,<br> &#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;0f04c226-258d-11f0-9f61-3cecefb2262e&#x27;</span>,<br>  <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">3</span>&#125;&#125;]<br><br></code></pre></td></tr></table></figure>
+<p>查看一下修改的结果，我们把纽约的信息，全部修改成了北京</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs Python">collection_results = db_manager.get_collection_texts(collection_name=<span class="hljs-string">&#x27;city&#x27;</span>)<br><span class="hljs-keyword">for</span> collection_result <span class="hljs-keyword">in</span> collection_results:<br>    <span class="hljs-built_in">print</span>(collection_result)<br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;0f04c1d6-258d-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;北京市（Beijing），简称“京”，古称燕京、北平，是中华人民共和国首都、直辖市、国家中心城市、超大城市&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">2</span>&#125;&#125;<br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;0f04c226-258d-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;2023年，北京市全年实现地区生产总值43760.7亿元，按不变价格计算，比上年增长5.2%&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">3</span>&#125;&#125;<br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;cce06eb6-258e-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;上海市地处长江三角洲冲积平原，地势坦荡低平， 属亚热带季风性气候，最大河流为黄浦江。&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city2&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">0</span>&#125;&#125;<br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;cce06f92-258e-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;2024年，上海市实现地区生产总值53926.71亿元，按不变价格计算，比上年增长5.0%。&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city2&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">1</span>&#125;&#125;<br>&#123;<span class="hljs-string">&#x27;id&#x27;</span>: <span class="hljs-string">&#x27;cce06ff6-258e-11f0-9f61-3cecefb2262e&#x27;</span>, <span class="hljs-string">&#x27;text&#x27;</span>: <span class="hljs-string">&#x27;上海市是中国国际经济、金融、贸易、航运、科技创新中心，第三产业为其支柱产业，有着外贸物流、金融保险业、信息服务业、旅游业、房地产业和其他新兴服务业， 成为拉动经济增长“主动力”&#x27;</span>, <span class="hljs-string">&#x27;metadata&#x27;</span>: &#123;<span class="hljs-string">&#x27;domain&#x27;</span>: <span class="hljs-string">&#x27;city2&#x27;</span>, <span class="hljs-string">&#x27;source&#x27;</span>: <span class="hljs-number">2</span>&#125;&#125;<br><br></code></pre></td></tr></table></figure>
+<p>完整代码：</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/Sakaiay/chromadb_demo/tree/main">https://github.com/Sakaiay/chromadb_demo/tree/main</a></p>
+<h2 id="参考"><a class="markdownIt-Anchor" href="#参考"></a> 参考</h2>
+<p><a target="_blank" rel="noopener" href="https://docs.trychroma.com/docs/overview/introduction">Introduction - Chroma Docs</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/llm/" class="print-no-link">#llm</a>
+      
+        <a href="/tags/chroma/" class="print-no-link">#chroma</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Chroma简单介绍和教程</div>
+      <div>http://example.com/2025/05/05/Chroma简单介绍和教程/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Sakaiay</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年5月5日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/05/03/%E7%BB%9F%E8%AE%A1%E5%AD%A6%E4%B9%A0%E6%96%B9%E6%B3%95%E2%80%94%E2%80%94%E6%94%AF%E6%8C%81%E5%90%91%E9%87%8F%E6%9C%BA/" title="统计学习方法—-支持向量机">
+                        <span class="hidden-mobile">统计学习方法—-支持向量机</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量 
+        <span id="leancloud-site-pv"></span>
+         次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
