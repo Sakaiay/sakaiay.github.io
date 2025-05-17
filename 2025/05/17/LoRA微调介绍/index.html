@@ -1,0 +1,785 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/web_icon.png">
+  <link rel="icon" href="/img/web_icon.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Sakaiay">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="LoRA微调介绍 神经网络包含很多全连接层，其借助于矩阵乘法得以实现，然而，很多全连接层的权重矩阵都是满秩的。当针对特定任务进行微调后，模型中权重矩阵其实具有很低的本征秩（intrinsic rank），因此，论文的作者认为权重更新的那部分参数矩阵尽管随机投影到较小的子空间，仍然可以有效的学习，可以理解为针对特定的下游任务这些权重矩阵就不要求满秩。  基础知识 矩阵的秩：秩的定义是矩阵中的线性无">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LoRA微调介绍">
+<meta property="og:url" content="http://example.com/2025/05/17/LoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/index.html">
+<meta property="og:site_name" content="Sakaiay">
+<meta property="og:description" content="LoRA微调介绍 神经网络包含很多全连接层，其借助于矩阵乘法得以实现，然而，很多全连接层的权重矩阵都是满秩的。当针对特定任务进行微调后，模型中权重矩阵其实具有很低的本征秩（intrinsic rank），因此，论文的作者认为权重更新的那部分参数矩阵尽管随机投影到较小的子空间，仍然可以有效的学习，可以理解为针对特定的下游任务这些权重矩阵就不要求满秩。  基础知识 矩阵的秩：秩的定义是矩阵中的线性无">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/2025/05/17/LoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/pipeline.png">
+<meta property="og:image" content="http://example.com/2025/05/17/LoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/pipeline2.png">
+<meta property="og:image" content="http://example.com/2025/05/17/LoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/shiyan1.png">
+<meta property="og:image" content="http://example.com/2025/05/17/LoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/shiyan2.png">
+<meta property="og:image" content="http://example.com/2025/05/17/LoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/shiyan3.png">
+<meta property="article:published_time" content="2025-05-17T07:25:24.000Z">
+<meta property="article:modified_time" content="2025-05-17T08:09:27.938Z">
+<meta property="article:author" content="Sakaiay">
+<meta property="article:tag" content="llm">
+<meta property="article:tag" content="大模型原理">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://example.com/2025/05/17/LoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/pipeline.png">
+  
+  
+  
+  <title>LoRA微调介绍 - Sakaiay</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/KaTeX/0.16.2/katex.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":"aspNX8i3GSBYUjhTydoneKGV-gzGzoHsz","app_key":"L0JSkdprGlxz0p9lO8Uk3NnG","server_url":"https://aspnx8i3.lc-cn-n1-shared.com","path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Sakaiay</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/background1.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LoRA微调介绍"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-author" aria-hidden="true"></i>
+        Sakaiay
+      </span>
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-05-17 15:25" pubdate>
+          2025年5月17日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          21 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">LoRA微调介绍</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="lora微调介绍"><a class="markdownIt-Anchor" href="#lora微调介绍"></a> LoRA微调介绍</h1>
+<p>神经网络包含很多全连接层，其借助于矩阵乘法得以实现，然而，很多全连接层的权重矩阵都是满秩的。当针对特定任务进行微调后，<strong>模型中权重矩阵其实具有很低的本征秩</strong>（intrinsic rank），因此，论文的作者认为<strong>权重更新的那部分参数矩阵尽管随机投影到较小的子空间，仍然可以有效的学习，可以理解为针对特定的下游任务这些权重矩阵就不要求满秩</strong>。</p>
+<h2 id="基础知识"><a class="markdownIt-Anchor" href="#基础知识"></a> 基础知识</h2>
+<p>矩阵的秩：秩的定义是矩阵中的线性无关行或列的最大数量。</p>
+<p>矩阵的秩的度量其实就是<strong>矩阵的行列之间的相关性</strong>。如果矩阵的各行或列是<strong>线性无关</strong>的，矩阵就是<strong>满秩</strong>的。</p>
+<p><strong>低秩矩阵</strong> 指矩阵的秩相对矩阵的行数或列数而言很小。</p>
+<p><strong>低秩（Low-rank）的意义</strong> 低秩矩阵的每行或者每列都可以用其他的行或者列线性表示，这说明这个矩阵包含了大量的冗余信息。</p>
+<h2 id="技术原理"><a class="markdownIt-Anchor" href="#技术原理"></a> 技术原理</h2>
+<p>LoRA（论文：<strong>LoRA: LOW-RANK ADAPTATION OF LARGE LANGUAGE MODELS</strong>），该方法的核心思想就是<strong>通过低秩分解来模拟参数的改变量，从而以极小的参数量来实现大模型的间接训练。</strong></p>
+<p>在涉及到矩阵相乘的模块，在原始的PLM旁边增加一个新的通路，通过前后两个矩阵<code>A</code>,<code>B</code>相乘，第一个矩阵<code>A</code>负责降维，第二个矩阵<code>B</code>负责升维，中间层维度为<code>r</code>，从而来模拟所谓的本征秩（intrinsic rank）。</p>
+<img src="/2025/05/17/LoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/pipeline.png" srcset="/img/loading.gif" lazyload class="">
+<p>可训练层维度和预训练模型层维度一致为<code>d</code>，先将维度<code>d</code>通过全连接层降维至<code>r</code>，再从<code>r</code>通过全连接层映射回<code>d</code>维度，其中，<code>r&lt;&lt;d</code>，<code>r</code>是矩阵的秩，这样矩阵计算就从<code>d x d</code>变为<code>d x r + r x d</code>，参数量减少很多。</p>
+<p>若原本全连接层为<code>768×768</code>。我们通过<code>A</code>,<code>B</code>替代，可以变成<code>768×8 </code>、<code>8×768</code></p>
+<p>参数量从<code>768×768</code>变成了<code>768×8 + 8×768</code></p>
+<img src="/2025/05/17/LoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/pipeline2.png" srcset="/img/loading.gif" lazyload class="">
+<p>微调时，<strong>固定模型的其他参数，只优化新增的两个矩阵</strong> <strong><code>A</code></strong> <strong>,</strong> <strong><code>B</code></strong> <strong>的权重参数</strong>，将PLM（Pre-trained Language Model）跟新增的通路两部分的结果加起来作为最终的结果（两边通路的输入跟输出维度是一致的），即<code>h=Wx+BAx</code>。<strong>第一个矩阵的A的权重参数会通过高斯函数初始化</strong>，而<strong>第二个矩阵的B的权重参数则会初始化为零矩阵</strong>，这样能保证训练开始时新增的通路BA=0从而对模型结果没有影响。</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>h</mi><mo>=</mo><msub><mi>W</mi><mn>0</mn></msub><mi>x</mi><mo>+</mo><mi mathvariant="normal">Δ</mi><mi>W</mi><mi>x</mi><mo>=</mo><msub><mi>W</mi><mn>0</mn></msub><mi>x</mi><mo>+</mo><mi>B</mi><mi>A</mi><mi>x</mi></mrow><annotation encoding="application/x-tex">h=W_{0} x+\Delta W x=W_{0} x+B A x
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathnormal">h</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">0</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord">Δ</span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">0</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mord mathnormal">A</span><span class="mord mathnormal">x</span></span></span></span></span></p>
+<p>在推理时，将左右两部分的结果加到一起即可，<code>h=Wx+BAx=(W+BA)x</code>，所以只要将训练完成的矩阵乘积<code>BA</code>跟原本的权重矩阵<code>W</code>加到一起作为新权重参数替换原本PLM的W即可，对于推理来说，不会增加额外的计算资源。</p>
+<p>此外，Transformer的权重矩阵包括Attention模块里用于计算<code>query</code>, <code>key</code>, <code>value</code>的<code>Wq</code>，<code>Wk</code>，<code>Wv</code>以及多头attention的<code>Wo</code>,以及MLP层的权重矩阵，LoRA只应用于Attention模块中的4种权重矩阵，而且<strong>通过消融实验发现同时调整 Wq 和 Wv 会产生最佳结果</strong>。</p>
+<p>实验还发现，保证权重矩阵的种类的数量比起增加隐藏层维度r更为重要，增加r并不一定能覆盖更加有意义的子空间。</p>
+<img src="/2025/05/17/LoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/shiyan1.png" srcset="/img/loading.gif" lazyload class="">
+<img src="/2025/05/17/LoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/shiyan2.png" srcset="/img/loading.gif" lazyload class="">
+<p>那么关于秩的选择，通常情况下，rank为4，8，16即可。</p>
+<p>通过实验也发现，在众多数据集上LoRA在只训练极少量参数的前提下，最终在性能上能和全量微调匹配，甚至在某些任务上优于全量微调。</p>
+<img src="/2025/05/17/LoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/shiyan3.png" srcset="/img/loading.gif" lazyload class="">
+<h2 id="代码示例"><a class="markdownIt-Anchor" href="#代码示例"></a> 代码示例</h2>
+<p>使用Qwen2.5-1.5B进行代码演示</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">from</span> modelscope <span class="hljs-keyword">import</span> AutoModelForCausalLM, AutoTokenizer<br>model_path = <span class="hljs-string">&#x27;/Qwen/Qwen2___5-1___5B-Instruct&#x27;</span><br>model = AutoModelForCausalLM.from_pretrained(<br>    model_path,<br>    torch_dtype=<span class="hljs-string">&quot;auto&quot;</span>,<br>    device_map=<span class="hljs-string">&quot;auto&quot;</span><br>)<br>tokenizer = AutoTokenizer.from_pretrained(model_path)<br><span class="hljs-built_in">print</span>(model)<br></code></pre></td></tr></table></figure>
+<p>加载一个原始的Qwen model</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><code class="hljs python">Qwen2ForCausalLM(<br>  (model): Qwen2Model(<br>    (embed_tokens): Embedding(<span class="hljs-number">151936</span>, <span class="hljs-number">1536</span>)<br>    (layers): ModuleList(<br>      (<span class="hljs-number">0</span>-<span class="hljs-number">27</span>): <span class="hljs-number">28</span> x Qwen2DecoderLayer(<br>        (self_attn): Qwen2SdpaAttention(<br>          (q_proj): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">1536</span>, bias=<span class="hljs-literal">True</span>)<br>          (k_proj): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">256</span>, bias=<span class="hljs-literal">True</span>)<br>          (v_proj): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">256</span>, bias=<span class="hljs-literal">True</span>)<br>          (o_proj): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">1536</span>, bias=<span class="hljs-literal">False</span>)<br>          (rotary_emb): Qwen2RotaryEmbedding()<br>        )<br>        (mlp): Qwen2MLP(<br>          (gate_proj): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">8960</span>, bias=<span class="hljs-literal">False</span>)<br>          (up_proj): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">8960</span>, bias=<span class="hljs-literal">False</span>)<br>          (down_proj): Linear(in_features=<span class="hljs-number">8960</span>, out_features=<span class="hljs-number">1536</span>, bias=<span class="hljs-literal">False</span>)<br>          (act_fn): SiLU()<br>        )<br>        (input_layernorm): Qwen2RMSNorm((<span class="hljs-number">1536</span>,), eps=<span class="hljs-number">1e-06</span>)<br>        (post_attention_layernorm): Qwen2RMSNorm((<span class="hljs-number">1536</span>,), eps=<span class="hljs-number">1e-06</span>)<br>      )<br>    )<br>    (norm): Qwen2RMSNorm((<span class="hljs-number">1536</span>,), eps=<span class="hljs-number">1e-06</span>)<br>  )<br>  (lm_head): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">151936</span>, bias=<span class="hljs-literal">False</span>)<br>)<br></code></pre></td></tr></table></figure>
+<p>导入LoRA的配置</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">from</span> peft <span class="hljs-keyword">import</span> LoraConfig, TaskType, get_peft_model<br>config = LoraConfig(task_type=TaskType.CAUSAL_LM, target_modules=[<span class="hljs-string">&#x27;q_proj&#x27;</span>, <span class="hljs-string">&#x27;v_proj&#x27;</span>], r=<span class="hljs-number">16</span>, lora_alpha=<span class="hljs-number">16</span>)<br>config<br></code></pre></td></tr></table></figure>
+<p>这里的<code>task_type</code>为任务类型，因为Qwen属于因果模型，因此这里选择<code>CAUSAL_LM</code>，</p>
+<p>其他选择如下(源码目录为：<strong>/peft/utils/peft_types.py</strong>)：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">class</span> <span class="hljs-title class_">TaskType</span>(<span class="hljs-built_in">str</span>, enum.Enum):<br>    <span class="hljs-string">&quot;&quot;&quot;</span><br><span class="hljs-string">    Enum class for the different types of tasks supported by PEFT.</span><br><span class="hljs-string"></span><br><span class="hljs-string">    Overview of the supported task types:</span><br><span class="hljs-string">    - SEQ_CLS: Text classification.</span><br><span class="hljs-string">    - SEQ_2_SEQ_LM: Sequence-to-sequence language modeling.</span><br><span class="hljs-string">    - CAUSAL_LM: Causal language modeling.</span><br><span class="hljs-string">    - TOKEN_CLS: Token classification.</span><br><span class="hljs-string">    - QUESTION_ANS: Question answering.</span><br><span class="hljs-string">    - FEATURE_EXTRACTION: Feature extraction. Provides the hidden states which can be used as embeddings or features</span><br><span class="hljs-string">      for downstream tasks.</span><br><span class="hljs-string">    &quot;&quot;&quot;</span><br><br>    SEQ_CLS = <span class="hljs-string">&quot;SEQ_CLS&quot;</span><br>    SEQ_2_SEQ_LM = <span class="hljs-string">&quot;SEQ_2_SEQ_LM&quot;</span><br>    CAUSAL_LM = <span class="hljs-string">&quot;CAUSAL_LM&quot;</span><br>    TOKEN_CLS = <span class="hljs-string">&quot;TOKEN_CLS&quot;</span><br>    QUESTION_ANS = <span class="hljs-string">&quot;QUESTION_ANS&quot;</span><br>    FEATURE_EXTRACTION = <span class="hljs-string">&quot;FEATURE_EXTRACTION&quot;</span><br></code></pre></td></tr></table></figure>
+<p>其他比较重要的参数如下：</p>
+<ul>
+<li>
+<p><code>r</code> :LoRA模型的注意力维度（也叫秩）。表示低秩适应矩阵的维度。</p>
+</li>
+<li>
+<p><code>target_modules</code>:要应用LoRA的模块名称。如果是字符串，会执行正则匹配；如果是列表，会精确匹配或检查模块名是否以指定的字符串结尾。</p>
+</li>
+<li>
+<p><code>lora_dropout</code>:LoRA层的dropout概率，防止过拟合。</p>
+</li>
+<li>
+<p><code>modules_to_save</code>:除了LoRA适配器层之外，还要保存并训练的模块。用于某些模型，如分类任务中的输出层。</p>
+</li>
+<li>
+<p><strong><code>lora_alpha：</code></strong> <strong>缩放因子</strong>,起到的是调节作用。</p>
+<p>在 LoRA 中，<code>lora_alpha</code> 是一个缩放因子，用来控制微调部分 ( $ A \cdot B $) 对原始权重矩阵 $ W_0 $ 的影响。其目的是为了更好地调节微调的幅度，从而避免对原始模型造成过大的扰动。</p>
+<p>具体来说，调整后的模型权重可以表示为：</p>
+</li>
+</ul>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>W</mi><mtext>new </mtext></msub><mo>=</mo><msub><mi>W</mi><mn>0</mn></msub><mo>+</mo><mfrac><mi>α</mi><mi>r</mi></mfrac><mo stretchy="false">(</mo><mi>A</mi><mo>⋅</mo><mi>B</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">W_{\text {new }}=W_{0}+\frac{\alpha}{r}(A \cdot B)
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.151392em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord text mtight"><span class="mord mtight">new </span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">0</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1.7935600000000003em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.10756em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.02778em;">r</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mopen">(</span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span><span class="mclose">)</span></span></span></span></span></p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">W_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.83333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.13889em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>是原始模型的权重矩阵。</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>⋅</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">A \cdot B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span>是通过低秩矩阵计算出来的增量。</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span>是 <code>lora_alpha</code>，用于缩放 ( <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>⋅</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">A \cdot B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span> ) 的值。</p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi></mrow><annotation encoding="application/x-tex">r</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.43056em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span></span></span></span>是低秩矩阵的秩<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mi>a</mi><mi>n</mi><mi>k</mi></mrow><annotation encoding="application/x-tex">rank</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">r</span><span class="mord mathnormal">a</span><span class="mord mathnormal">n</span><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span>，用于标准化。</p>
+<p><code>target_modules</code>参数如果不指定的话，会根据微调的模型选择默认的modules。</p>
+<p>源码目录为：<strong>/peft/utils/constants.py</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs Python">TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING = &#123;<br>    <span class="hljs-string">&quot;t5&quot;</span>: [<span class="hljs-string">&quot;q&quot;</span>, <span class="hljs-string">&quot;v&quot;</span>],<br>    <span class="hljs-string">&quot;mt5&quot;</span>: [<span class="hljs-string">&quot;q&quot;</span>, <span class="hljs-string">&quot;v&quot;</span>],<br>    <span class="hljs-string">&quot;bart&quot;</span>: [<span class="hljs-string">&quot;q_proj&quot;</span>, <span class="hljs-string">&quot;v_proj&quot;</span>],<br>    <span class="hljs-string">&quot;gpt2&quot;</span>: [<span class="hljs-string">&quot;c_attn&quot;</span>],<br>    <span class="hljs-string">&quot;bloom&quot;</span>: [<span class="hljs-string">&quot;query_key_value&quot;</span>],<br>    <span class="hljs-string">&quot;blip-2&quot;</span>: [<span class="hljs-string">&quot;q&quot;</span>, <span class="hljs-string">&quot;v&quot;</span>, <span class="hljs-string">&quot;q_proj&quot;</span>, <span class="hljs-string">&quot;v_proj&quot;</span>],<br>    <span class="hljs-string">&quot;opt&quot;</span>: [<span class="hljs-string">&quot;q_proj&quot;</span>, <span class="hljs-string">&quot;v_proj&quot;</span>],<br>    <span class="hljs-string">&quot;gptj&quot;</span>: [<span class="hljs-string">&quot;q_proj&quot;</span>, <span class="hljs-string">&quot;v_proj&quot;</span>],<br>    <span class="hljs-string">&quot;gpt_neox&quot;</span>: [<span class="hljs-string">&quot;query_key_value&quot;</span>],<br>    <span class="hljs-string">&quot;gpt_neo&quot;</span>: [<span class="hljs-string">&quot;q_proj&quot;</span>, <span class="hljs-string">&quot;v_proj&quot;</span>],<br>    <span class="hljs-string">&quot;bert&quot;</span>: [<span class="hljs-string">&quot;query&quot;</span>, <span class="hljs-string">&quot;value&quot;</span>],<br>    <span class="hljs-string">&quot;roberta&quot;</span>: [<span class="hljs-string">&quot;query&quot;</span>, <span class="hljs-string">&quot;value&quot;</span>],<br>    <span class="hljs-string">&quot;xlm-roberta&quot;</span>: [<span class="hljs-string">&quot;query&quot;</span>, <span class="hljs-string">&quot;value&quot;</span>],<br>    <span class="hljs-string">&quot;electra&quot;</span>: [<span class="hljs-string">&quot;query&quot;</span>, <span class="hljs-string">&quot;value&quot;</span>],<br>    <span class="hljs-string">&quot;deberta-v2&quot;</span>: [<span class="hljs-string">&quot;query_proj&quot;</span>, <span class="hljs-string">&quot;value_proj&quot;</span>],<br>    <span class="hljs-string">&quot;deberta&quot;</span>: [<span class="hljs-string">&quot;in_proj&quot;</span>],<br>    <span class="hljs-string">&quot;layoutlm&quot;</span>: [<span class="hljs-string">&quot;query&quot;</span>, <span class="hljs-string">&quot;value&quot;</span>],<br>    <span class="hljs-string">&quot;llama&quot;</span>: [<span class="hljs-string">&quot;q_proj&quot;</span>, <span class="hljs-string">&quot;v_proj&quot;</span>],<br>    <span class="hljs-string">&quot;chatglm&quot;</span>: [<span class="hljs-string">&quot;query_key_value&quot;</span>],<br>    <span class="hljs-string">&quot;gpt_bigcode&quot;</span>: [<span class="hljs-string">&quot;c_attn&quot;</span>],<br>    <span class="hljs-string">&quot;mpt&quot;</span>: [<span class="hljs-string">&quot;Wqkv&quot;</span>],<br>    <span class="hljs-string">&quot;RefinedWebModel&quot;</span>: [<span class="hljs-string">&quot;query_key_value&quot;</span>],<br>    <span class="hljs-string">&quot;RefinedWeb&quot;</span>: [<span class="hljs-string">&quot;query_key_value&quot;</span>],<br>    <span class="hljs-string">&quot;falcon&quot;</span>: [<span class="hljs-string">&quot;query_key_value&quot;</span>],<br>    <span class="hljs-string">&quot;btlm&quot;</span>: [<span class="hljs-string">&quot;c_proj&quot;</span>, <span class="hljs-string">&quot;c_attn&quot;</span>],<br>    <span class="hljs-string">&quot;codegen&quot;</span>: [<span class="hljs-string">&quot;qkv_proj&quot;</span>],<br>    <span class="hljs-string">&quot;mistral&quot;</span>: [<span class="hljs-string">&quot;q_proj&quot;</span>, <span class="hljs-string">&quot;v_proj&quot;</span>],<br>    <span class="hljs-string">&quot;mixtral&quot;</span>: [<span class="hljs-string">&quot;q_proj&quot;</span>, <span class="hljs-string">&quot;v_proj&quot;</span>],<br>    <span class="hljs-string">&quot;stablelm&quot;</span>: [<span class="hljs-string">&quot;q_proj&quot;</span>, <span class="hljs-string">&quot;v_proj&quot;</span>],<br>    <span class="hljs-string">&quot;phi&quot;</span>: [<span class="hljs-string">&quot;q_proj&quot;</span>, <span class="hljs-string">&quot;v_proj&quot;</span>, <span class="hljs-string">&quot;fc1&quot;</span>, <span class="hljs-string">&quot;fc2&quot;</span>],<br>    <span class="hljs-string">&quot;gemma&quot;</span>: [<span class="hljs-string">&quot;q_proj&quot;</span>, <span class="hljs-string">&quot;v_proj&quot;</span>],<br>&#125;<br></code></pre></td></tr></table></figure>
+<p>因为Qwen2并没有默认值，因此需要我们指定微调的modules，我们指定微调模型的<code>q_proj</code> 和<code>v_proj</code>两个投影层。</p>
+<p>然后我们通过<code>get_peft_model</code>函数得到需要微调的模型。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs Python">lora_model = get_peft_model(model, config)  <br><span class="hljs-built_in">print</span>(lora_model)<br></code></pre></td></tr></table></figure>
+<p>lora_model的结构如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><code class="hljs Python">PeftModelForCausalLM(<br>  (base_model): LoraModel(<br>    (model): Qwen2ForCausalLM(<br>      (model): Qwen2Model(<br>        (embed_tokens): Embedding(<span class="hljs-number">151936</span>, <span class="hljs-number">1536</span>)<br>        (layers): ModuleList(<br>          (<span class="hljs-number">0</span>-<span class="hljs-number">27</span>): <span class="hljs-number">28</span> x Qwen2DecoderLayer(<br>            (self_attn): Qwen2SdpaAttention(<br>              (q_proj): lora.Linear(<br>                (base_layer): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">1536</span>, bias=<span class="hljs-literal">True</span>)<br>                (lora_dropout): ModuleDict(<br>                  (default): Identity()<br>                )<br>                (lora_A): ModuleDict(<br>                  (default): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">16</span>, bias=<span class="hljs-literal">False</span>)<br>                )<br>                (lora_B): ModuleDict(<br>                  (default): Linear(in_features=<span class="hljs-number">16</span>, out_features=<span class="hljs-number">1536</span>, bias=<span class="hljs-literal">False</span>)<br>                )<br>                (lora_embedding_A): ParameterDict()<br>                (lora_embedding_B): ParameterDict()<br>              )<br>              (k_proj): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">256</span>, bias=<span class="hljs-literal">True</span>)<br>              (v_proj): lora.Linear(<br>                (base_layer): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">256</span>, bias=<span class="hljs-literal">True</span>)<br>                (lora_dropout): ModuleDict(<br>                  (default): Identity()<br>                )<br>                (lora_A): ModuleDict(<br>                  (default): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">16</span>, bias=<span class="hljs-literal">False</span>)<br>                )<br>                (lora_B): ModuleDict(<br>                  (default): Linear(in_features=<span class="hljs-number">16</span>, out_features=<span class="hljs-number">256</span>, bias=<span class="hljs-literal">False</span>)<br>                )<br>                (lora_embedding_A): ParameterDict()<br>                (lora_embedding_B): ParameterDict()<br>              )<br>              (o_proj): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">1536</span>, bias=<span class="hljs-literal">False</span>)<br>              (rotary_emb): Qwen2RotaryEmbedding()<br>            )<br>            (mlp): Qwen2MLP(<br>              (gate_proj): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">8960</span>, bias=<span class="hljs-literal">False</span>)<br>              (up_proj): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">8960</span>, bias=<span class="hljs-literal">False</span>)<br>              (down_proj): Linear(in_features=<span class="hljs-number">8960</span>, out_features=<span class="hljs-number">1536</span>, bias=<span class="hljs-literal">False</span>)<br>              (act_fn): SiLU()<br>            )<br>            (input_layernorm): Qwen2RMSNorm((<span class="hljs-number">1536</span>,), eps=<span class="hljs-number">1e-06</span>)<br>            (post_attention_layernorm): Qwen2RMSNorm((<span class="hljs-number">1536</span>,), eps=<span class="hljs-number">1e-06</span>)<br>          )<br>        )<br>        (norm): Qwen2RMSNorm((<span class="hljs-number">1536</span>,), eps=<span class="hljs-number">1e-06</span>)<br>      )<br>      (lm_head): Linear(in_features=<span class="hljs-number">1536</span>, out_features=<span class="hljs-number">151936</span>, bias=<span class="hljs-literal">False</span>)<br>    )<br>  )<br>)<br></code></pre></td></tr></table></figure>
+<p>可以看到需要我们微调的<code>q_proj</code> 和<code>v_proj</code>投影层多了<code>lora_A</code>和<code>lora_B</code>两个分路。</p>
+<p>打印下可学习的参数</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs Python">lora_model.print_trainable_parameters()  <br><span class="hljs-comment"># trainable params: 2,179,072 || all params: 1,545,893,376 || trainable%: 0.1410</span><br><br></code></pre></td></tr></table></figure>
+<p>可以看到训练的参数仅仅是是全部参数的14%。</p>
+<p>lora模型定义好后，就可以训练了</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">from</span> transformers <span class="hljs-keyword">import</span> DataCollatorForSeq2Seq, TrainingArguments, Trainer<br>args = TrainingArguments(<br>    output_dir=<span class="hljs-string">&quot;/data01/tqbian/src/learning/LLM_Toturials/LoRa_Qwen2.5/output_model/&quot;</span>,  <br>    per_device_train_batch_size=<span class="hljs-number">32</span>,  <br>    gradient_accumulation_steps=<span class="hljs-number">8</span>,  <br>    logging_steps=<span class="hljs-number">50</span>,  <br>    num_train_epochs=<span class="hljs-number">3</span> <br>    <br>)<br>trainer = Trainer(<br>    model=lora_model,<br>    args=args,<br>    tokenizer=tokenizer,<br>    train_dataset=tokenized_ds,<br>    data_collator=DataCollatorForSeq2Seq(tokenizer=tokenizer, padding=<span class="hljs-literal">True</span>),<br>)  <br>trainer.train()  <br></code></pre></td></tr></table></figure>
+<p>接着我们看下具体执行代码的时候lora是如何执行的</p>
+<p>源码目录：<strong>/peft/tuners/lora/layer.py</strong></p>
+<p>为了方便我们只看 <strong>Linear</strong>类。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">forward</span>(<span class="hljs-params">self, x: torch.Tensor, *args: <span class="hljs-type">Any</span>, **kwargs: <span class="hljs-type">Any</span></span>) -&gt; torch.Tensor:<br>    <span class="hljs-variable language_">self</span>._check_forward_args(x, *args, **kwargs)<br>    adapter_names = kwargs.pop(<span class="hljs-string">&quot;adapter_names&quot;</span>, <span class="hljs-literal">None</span>)<br><br>    <span class="hljs-keyword">if</span> <span class="hljs-variable language_">self</span>.disable_adapters:<br>        <span class="hljs-keyword">if</span> <span class="hljs-variable language_">self</span>.merged:<br>            <span class="hljs-variable language_">self</span>.unmerge()<br>        result = <span class="hljs-variable language_">self</span>.base_layer(x, *args, **kwargs)<br>    <span class="hljs-keyword">elif</span> adapter_names <span class="hljs-keyword">is</span> <span class="hljs-keyword">not</span> <span class="hljs-literal">None</span>:<br>        result = <span class="hljs-variable language_">self</span>._mixed_batch_forward(x, *args, adapter_names=adapter_names, **kwargs)<br>    <span class="hljs-keyword">elif</span> <span class="hljs-variable language_">self</span>.merged:<br>        result = <span class="hljs-variable language_">self</span>.base_layer(x, *args, **kwargs)<br>    <span class="hljs-keyword">else</span>:<br>        result = <span class="hljs-variable language_">self</span>.base_layer(x, *args, **kwargs)<br>        torch_result_dtype = result.dtype<br>        <span class="hljs-keyword">for</span> active_adapter <span class="hljs-keyword">in</span> <span class="hljs-variable language_">self</span>.active_adapters:<br>            <span class="hljs-keyword">if</span> active_adapter <span class="hljs-keyword">not</span> <span class="hljs-keyword">in</span> <span class="hljs-variable language_">self</span>.lora_A.keys():<br>                <span class="hljs-keyword">continue</span><br>            lora_A = <span class="hljs-variable language_">self</span>.lora_A[active_adapter]<br>            lora_B = <span class="hljs-variable language_">self</span>.lora_B[active_adapter]<br>            dropout = <span class="hljs-variable language_">self</span>.lora_dropout[active_adapter]<br>            scaling = <span class="hljs-variable language_">self</span>.scaling[active_adapter]<br>            x = x.to(lora_A.weight.dtype)<br><br>            <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> <span class="hljs-variable language_">self</span>.use_dora[active_adapter]:<br>                result = result + lora_B(lora_A(dropout(x))) * scaling<br>            <span class="hljs-keyword">else</span>:<br>                x = dropout(x)<br>                result = result + <span class="hljs-variable language_">self</span>._apply_dora(x, lora_A, lora_B, scaling, active_adapter)<br><br>        result = result.to(torch_result_dtype)<br><br>    <span class="hljs-keyword">return</span> result<br></code></pre></td></tr></table></figure>
+<p>可以看到数据<code>x</code>有两条分路：1. 原始的PLM。2. <strong><code>lora_B(lora_A(dropout(x))) * scaling</code><strong>其中</strong><code>scaling</code><strong>可以参考我上文提到的</strong><code>lora_alpha</code></strong> 参数。</p>
+<p>两条分路的相加为最后的结果。</p>
+<p>训练完成后，需要合并lora模型</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs Python"><span class="hljs-keyword">from</span> peft <span class="hljs-keyword">import</span> PeftModel<br>lora_train_model = PeftModel.from_pretrained(model, model_id=<span class="hljs-string">&quot;./output_model/checkpoint&quot;</span>)<br><br>merge_model = lora_train_model.merge_and_unload()<br>merge_model.save_pretrained(<span class="hljs-string">&quot;./output_model/merge_model&quot;</span>)<br><br></code></pre></td></tr></table></figure>
+<h2 id="参考"><a class="markdownIt-Anchor" href="#参考"></a> 参考</h2>
+<p>【通俗易懂理解全量微调和LoRA微调】 <a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1tthPeFEWb/?share_source=copy_web&amp;vd_source=5b4170cace78b47030b76c83c2d0dace">https://www.bilibili.com/video/BV1tthPeFEWb/?share_source=copy_web&amp;vd_source=5b4170cace78b47030b76c83c2d0dace</a></p>
+<p>【【手把手带你实战HuggingFace Transformers-高效微调篇】LoRA 原理与实战】 <a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV13w411y7fq/?share_source=copy_web&amp;vd_source=5b4170cace78b47030b76c83c2d0dace">https://www.bilibili.com/video/BV13w411y7fq/?share_source=copy_web&amp;vd_source=5b4170cace78b47030b76c83c2d0dace</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_41712499/article/details/136666112">通过代码，一步步解析ChatGLM的Lora微调实现细节_chatglm lora-CSDN博客</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/llm/" class="print-no-link">#llm</a>
+      
+        <a href="/tags/%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%8E%9F%E7%90%86/" class="print-no-link">#大模型原理</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LoRA微调介绍</div>
+      <div>http://example.com/2025/05/17/LoRA微调介绍/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Sakaiay</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年5月17日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/05/17/QLoRA%E5%BE%AE%E8%B0%83%E4%BB%8B%E7%BB%8D/" title="QLoRA微调介绍">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">QLoRA微调介绍</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/05/14/DeepSeek-R1%E8%AF%A6%E8%A7%A3%E4%BB%A5%E5%8F%8A%E7%AE%80%E5%8D%95%E5%A4%8D%E7%8E%B0/" title="DeepSeek R1详解以及简单复现">
+                        <span class="hidden-mobile">DeepSeek R1详解以及简单复现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+      <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a>
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量 
+        <span id="leancloud-site-pv"></span>
+         次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+         人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
